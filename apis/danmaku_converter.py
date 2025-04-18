@@ -1,17 +1,16 @@
 import os
-import sys
-import io
 import fnmatch
 from dmconvert import convert_xml_to_ass
 
 
-# 强制设置标准输出的编码为 UTF-8
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-
-def convert_to_ass(xml, ass):
+def convert_to_ass(xml_file, ass_file):
     """将弹幕文件转换为ASS格式"""
-    convert_xml_to_ass(xml, ass)
+    # 例如
+    font_size = 38
+    sc_font_size = 30
+    resolution_x = 1920
+    resolution_y = 1080
+    convert_xml_to_ass(font_size, sc_font_size, resolution_x, resolution_y, xml_file, ass_file)
 
     print(f"ASS 文件已生成: {ass}")
 

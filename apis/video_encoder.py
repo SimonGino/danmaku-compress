@@ -1,6 +1,4 @@
 import os
-import sys
-import io
 import fnmatch
 import subprocess
 import datetime
@@ -11,16 +9,12 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# 强制设置标准输出的编码为 UTF-8
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-
 def encode(video, ass, mp4, test_mode=False):
     """压制视频并合并弹幕"""
     # 调整 FFmpeg 命令以提高 Linux 兼容性，使用 libx264 软件编码器
-    cmd = f'ffmpeg -hwaccel auto -i {shlex.quote(video)} ' \
+    cmd = f'ffmpeg -hwaccel vaapi -i {shlex.quote(video)} ' \
           f'-vf "ass={shlex.quote(ass)}" ' \
-          f'-c:v libx264 -preset medium -crf 18 -c:a copy -y {shlex.quote(mp4)}'
+          f'-c:v h264_qsv -preset veryfast -preset veryfast -global_quality 22  -c:a copy -y {shlex.quote(mp4)}'
 
     logger.info(f"开始压制时间：{datetime.datetime.now()}")
     logger.info(f"执行命令: {cmd}") # 添加日志记录执行的命令
