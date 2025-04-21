@@ -4,6 +4,7 @@ import config # 引入配置文件
 from apis.remove_invalid_documents import BackupCleaner
 from apis.danmaku_converter import process_folder as convert_danmaku
 from apis.video_encoder import process_folder as encode_video
+from apis.biliup_uploader import upload_to_bilibili # 引入上传函数
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -40,6 +41,19 @@ def main():
     except Exception as e:
         logger.error(f"压制视频时出错: {e}")
         sys.exit(1)
+
+    # 4. 上传视频到 Bilibili
+    try:
+        logger.info("步骤 4: 上传视频到 Bilibili")
+        if not config.BILIUP_RS_PATH:
+            logger.warning("未在配置中找到 BILIUP_RS_PATH，跳过上传步骤。请在 .env 文件中设置。")
+        else:
+            upload_to_bilibili(biliup_path=config.BILIUP_RS_PATH)
+            logger.info("Bilibili 上传任务已启动 (具体进度请查看 biliup-rs 的日志)")
+    except Exception as e:
+        logger.error(f"上传到 Bilibili 时出错: {e}")
+        # 这里选择不退出 (sys.exit)，允许前面的步骤成功完成
+        # 可以根据需要决定是否要在这里退出
 
     logger.info("Danmaku Compress 流程执行完毕")
 

@@ -38,6 +38,8 @@ def process_folder(folder="."):
         ass_file = os.path.splitext(xml_file)[0] + ".ass"
         try:
             convert_to_ass(xml_file, ass_file)
+            # 继续删除转换完的xml文件
+            os.remove(xml_file)
         except Exception as e:
             print(f"处理 {xml_file} 时出错: {e}")
             continue
