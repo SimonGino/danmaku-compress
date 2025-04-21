@@ -19,11 +19,19 @@
 
 *   **Python 3:** 脚本基于 Python 3 编写。
 *   **FFmpeg:** 必须在系统环境变量中可以调用 `ffmpeg` 命令。视频压制功能依赖此程序。
-*   **dmconvert 库:** 弹幕转换功能需要此 Python 库。你可以通过 pip 安装：
+*   **Python 库:** 需要安装 `python-dotenv` 和 `dmconvert`。
     ```bash
-    pip install dmconvert 
+    pip install python-dotenv dmconvert
     ```
-    (如果 `dmconvert` 不是标准的 PyPI 包，请根据其来源进行安装)。
+    (建议将依赖写入 `requirements.txt` 文件: `echo -e "python-dotenv\ndmconvert" > requirements.txt && pip install -r requirements.txt`)
+*   **biliup-rs (B站上传工具):** 视频上传功能依赖此外部工具。
+    *   **获取:** 从官方 Releases 页面下载适合你操作系统的最新版本：[https://github.com/biliup/biliup-rs/releases](https://github.com/biliup/biliup-rs/releases)
+    *   **解压:** 将下载的压缩包解压到一个**固定**的目录。
+    *   **配置:** `biliup-rs` 需要进行配置才能使用。你需要：
+        1.  在该目录下创建或修改 `config.yaml` 文件，配置上传参数（如线路、投稿信息模板等）。
+        2.  运行一次 `./biliup login` （或根据其文档进行登录）以生成 `cookies.json` 文件，用于身份验证。
+        3.  **重要:** 本 `Danmaku Compress` 脚本**不会**自动配置 `biliup-rs`。你需要参考 `biliup-rs` 的官方文档完成其自身的配置。
+    *   **路径设置:** 在本项目根目录下的 `.env` 文件中，设置 `BILIUP_RS_PATH` 变量，使其指向你解压并配置好的 `biliup-rs` 所在的**目录**。
 
 ## 安装与配置
 
@@ -34,14 +42,16 @@
     ```
 2.  **安装依赖：**
     ```bash
-    pip install dmconvert # 如上所述安装 dmconvert
+    pip install python-dotenv dmconvert
     # 建议创建一个 requirements.txt 文件管理依赖
     ```
-3.  **配置路径：**
-    *   打开 `config.py` 文件。
-    *   修改 `BACKUP_FOLDER` 为你的备份文件夹路径（相对于项目根目录），脚本将在此处执行清理操作。
-    *   修改 `PROCESSING_FOLDER` 为你的待处理视频和弹幕文件夹路径（相对于项目根目录），脚本将在此处执行弹幕转换和视频压制。
-    *   确保这两个文件夹存在并且具有正确的读写权限。
+3.  **配置 `.env` 文件:**
+    *   在项目根目录下创建（或复制 `.env.example` 为 `.env`）一个名为 `.env` 的文件。
+    *   编辑 `.env` 文件，至少设置以下变量：
+        *   `BACKUP_FOLDER`: 备份文件夹路径（清理操作的目标）。
+        *   `PROCESSING_FOLDER`: 处理文件夹路径（转换和压制操作的目标，最终 MP4 文件会在此生成）。
+        *   `BILIUP_RS_PATH`: 指向你存放 `biliup-rs` 可执行文件、`config.yaml` 和 `cookies.json` 的目录的**绝对路径**。
+    *   确保这些路径对应的文件夹存在并且脚本具有读写权限。
 
 ## 使用方法
 
@@ -64,3 +74,12 @@
 *   **编码设置：** `video_encoder.py` 中默认使用 `libx264` 进行软件编码，以获得较好的兼容性。如果你的 Linux 系统支持并配置了硬件加速（如 NVENC, VAAPI），可以修改 `encode` 函数中的 `ffmpeg` 命令以利用硬件加速，提高速度。
 *   **错误处理：** 脚本包含基本的错误处理，但如果 FFmpeg 或 `dmconvert` 出错，流程可能会中断。请检查终端输出的日志以获取详细信息。
 *   **删除源文件：** 如果不希望在压制成功后删除原始的 FLV 和 ASS 文件，可以修改 `apis/video_encoder.py` 中 `encode` 函数，在调用 `subprocess.run` 后移除删除文件的逻辑，或者在 `main.py` 调用 `encode_video` 时传递 `test_mode=True` 参数（如果 `video_encoder.py` 支持该参数并传递给了 `encode` 函数）。
+*   **上传依赖:** 确保 `BILIUP_RS_PATH` 在 `.env` 中正确设置，并且该目录下的 `biliup-rs` 已正确配置并能独立运行 (`./biliup upload -c config.yaml` 应能手动成功执行)。
+*   **`biliup-rs` 目录结构示例 (位于 `BILIUP_RS_PATH`):**
+    ```
+    /path/to/your/biliup-rs/  <-- BILIUP_RS_PATH 指向这里
+    ├── biliup                # biliup-rs 可执行文件
+    ├── config.yaml           # biliup-rs 配置文件
+    ├── cookies.json          # 登录后生成的 cookies 文件
+    └── uploads/              # (可选) biliup-rs 可能使用的上传目录
+    ```

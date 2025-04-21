@@ -2,6 +2,7 @@ import subprocess
 import logging
 import os
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def upload_to_bilibili(biliup_path: str, config_file: str = "config.yaml"):
