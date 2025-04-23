@@ -11,10 +11,20 @@ logger = logging.getLogger(__name__)
 
 def encode(video, ass, mp4, test_mode=False):
     """压制视频并合并弹幕"""
-    # 调整 FFmpeg 命令以提高 Linux 兼容性，使用 libx264 软件编码器
-    cmd = f'ffmpeg -hwaccel vaapi -i {shlex.quote(video)} ' \
-          f'-vf "ass={shlex.quote(ass)}" ' \
-          f'-c:v h264_qsv -preset veryfast -preset veryfast -global_quality 22  -c:a copy -y {shlex.quote(mp4)}'
+    # 调整 FFmpeg 命令以使用 QSV 硬件加速
+    cmd = (
+        f'ffmpeg -v verbose '
+        f'-init_hw_device qsv=hw '
+        f'-hwaccel qsv '
+        f'-hwaccel_output_format qsv '
+        f'-i {shlex.quote(video)} '
+        f'-vf "ass={shlex.quote(ass)},hwupload=extra_hw_frames=64" '
+        f'-c:v h264_qsv '
+        f'-preset veryfast '
+        f'-global_quality 25 '
+        f'-c:a copy '
+        f'-y {shlex.quote(mp4)}'
+    )
 
     logger.info(f"开始压制时间：{datetime.datetime.now()}")
     logger.info(f"执行命令: {cmd}") # 添加日志记录执行的命令
