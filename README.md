@@ -61,7 +61,7 @@
 2.  **运行脚本：**
     在项目根目录下打开终端，执行：
     ```bash
-    python main.py
+    nohup uvicorn main:app --host 0.0.0.0 --port 50009 > fastapi_app.log 2>&1 &
     ```
 3.  **查看结果：**
     *   脚本会按顺序执行清理、转换、压制操作，并在终端输出日志信息。

@@ -2,15 +2,44 @@ import os
 import logging
 import fnmatch
 from dmconvert import convert_xml_to_ass
+import subprocess
+import json
 
 logger = logging.getLogger(__name__)
 def convert_to_ass(xml_file, ass_file):
     """将弹幕文件转换为ASS格式"""
-    # 例如
+    # 默认分辨率，仅在无法获取视频分辨率时使用
     font_size = 38
     sc_font_size = 30
     resolution_x = 1920
     resolution_y = 1080
+    
+    # 尝试获取对应视频的分辨率
+    video_file = os.path.splitext(xml_file)[0] + ".flv"
+    if os.path.exists(video_file):
+        try:
+            # 使用ffprobe获取视频分辨率
+            cmd = [
+                "ffprobe", 
+                "-v", "error", 
+                "-select_streams", "v:0", 
+                "-show_entries", "stream=width,height", 
+                "-of", "json", 
+                video_file
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                if "streams" in data and len(data["streams"]) > 0:
+                    stream = data["streams"][0]
+                    resolution_x = stream.get("width", resolution_x)
+                    resolution_y = stream.get("height", resolution_y)
+                    logger.info(f"检测到视频分辨率: {resolution_x}x{resolution_y}")
+        except Exception as e:
+            logger.warning(f"获取视频分辨率失败: {e}，将使用默认分辨率")
+    else:
+        logger.warning(f"未找到对应视频文件: {video_file}，将使用默认分辨率")
+        
     convert_xml_to_ass(font_size, sc_font_size, resolution_x, resolution_y, xml_file, ass_file)
 
     logger.info(f"ASS 文件已生成: {ass_file}")
