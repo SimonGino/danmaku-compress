@@ -60,7 +60,9 @@ def process_folder(folder=".", test_mode=False):
     all_files = os.listdir(folder)
     logger.info(f"当前目录下的文件：{all_files}")
 
-    flv_files = [os.path.join(folder, f) for f in all_files if fnmatch.fnmatch(f.lower(), "*.flv")]
+    # 过滤掉 .flv.part 文件（录制中的文件）
+    flv_files = [os.path.join(folder, f) for f in all_files 
+                if fnmatch.fnmatch(f.lower(), "*.flv") and not f.lower().endswith(".flv.part")]
     ass_files = [os.path.join(folder, f) for f in all_files if fnmatch.fnmatch(f.lower(), "*.ass")]
 
     logger.info(f"找到的FLV文件：{flv_files}")

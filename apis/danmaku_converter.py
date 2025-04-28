@@ -49,11 +49,14 @@ def process_folder(folder="."):
     folder = os.path.abspath(folder)
     logger.info(f"正在处理文件夹: {folder}")
     
-    # 获取所有XML文件
+    # 获取所有XML文件，过滤掉未完成的XML文件
     xml_files = []
     for root, _, files in os.walk(folder):
         for file in files:
-            if fnmatch.fnmatch(file.lower(), "*.xml"):
+            # 排除 .xml.part 和其他可能未完成的XML文件
+            if (fnmatch.fnmatch(file.lower(), "*.xml") and 
+                not file.lower().endswith(".xml.part") and
+                not file.lower().endswith(".part")):
                 xml_files.append(os.path.join(root, file))
 
     if not xml_files:
@@ -65,11 +68,20 @@ def process_folder(folder="."):
     # 处理每个XML文件
     for xml_file in xml_files:
         logger.info(f"\n处理文件: {xml_file}")
+        
+        # 检查是否有正在录制的对应FLV文件
+        flv_file = os.path.splitext(xml_file)[0] + ".flv"
+        flv_part_file = flv_file + ".part"
+        
+        if os.path.exists(flv_part_file):
+            logger.warning(f"对应的视频文件 {flv_part_file} 仍在录制中，跳过此XML文件")
+            continue
+            
         ass_file = os.path.splitext(xml_file)[0] + ".ass"
         try:
             convert_to_ass(xml_file, ass_file)
             # 继续删除转换完的xml文件
-            os.remove(xml_file)
+            # os.remove(xml_file)
         except Exception as e:
             logger.error(f"处理 {xml_file} 时出错: {e}")
             continue
